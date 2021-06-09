@@ -15,15 +15,19 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.todoapp.db.AppDatabase;
+import com.example.todoapp.db.User;
+
 import java.util.HashSet;
 import java.util.List;
 
 public class Adapter extends RecyclerView.Adapter<Adapter.AdapterViewHolder> {
 
-    private List<String> tasks_list;
+    private List<User> tasks_list;
     private Context context;
+    private AppDatabase db = AppDatabase.getDbInstance(context);
 
-    public Adapter(List<String> tasks_list, Context context) {
+    public Adapter(List<User> tasks_list, Context context) {
         this.tasks_list = tasks_list;
         this.context = context;
     }
@@ -37,7 +41,8 @@ public class Adapter extends RecyclerView.Adapter<Adapter.AdapterViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull Adapter.AdapterViewHolder holder, int position) {
-        String task = tasks_list.get(position);
+        User user1 = tasks_list.get(position);
+        String task = user1.firstName;
         holder.tv_task.setText(task);
         holder.tv_task.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,11 +84,14 @@ public class Adapter extends RecyclerView.Adapter<Adapter.AdapterViewHolder> {
                             Toast.makeText(context, "Can't create empty events!", Toast.LENGTH_SHORT).show();
                         } else {
                             holder.tv_task.setText(et_edit_here.getText());
-                            tasks_list.set(position, String.valueOf(et_edit_here.getText()));
+                            User user = new User();
+                            user.firstName = et_edit_here.getText().toString();
+                            tasks_list.set(position, user);
+                            db.userDao().updateUser(user);
                             notifyItemChanged(position);
-                            SharedPreferences sharedPreferences = context.getSharedPreferences("com.example.todoapp", Context.MODE_PRIVATE);
-                            HashSet<String> set = new HashSet(tasks_list);
-                            sharedPreferences.edit().putStringSet("addNote", set).apply();
+//                            SharedPreferences sharedPreferences = context.getSharedPreferences("com.example.todoapp", Context.MODE_PRIVATE);
+//                            HashSet<String> set = new HashSet(tasks_list);
+//                            sharedPreferences.edit().putStringSet("addNote", set).apply();
                             edit_dialog.dismiss();
                         }
                     }
@@ -93,12 +101,14 @@ public class Adapter extends RecyclerView.Adapter<Adapter.AdapterViewHolder> {
         holder.iv_delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                User user = tasks_list.get(position);
+                db.userDao().delete(user);
                 tasks_list.remove(position);
                 notifyItemRemoved(position);
                 notifyDataSetChanged();
-                SharedPreferences sharedPreferences = context.getSharedPreferences("com.example.todoapp", Context.MODE_PRIVATE);
-                HashSet<String> set = new HashSet(tasks_list);
-                sharedPreferences.edit().putStringSet("addNote", set).apply();
+//                SharedPreferences sharedPreferences = context.getSharedPreferences("com.example.todoapp", Context.MODE_PRIVATE);
+//                HashSet<String> set = new HashSet(tasks_list);
+//                sharedPreferences.edit().putStringSet("addNote", set).apply();
             }
         });
     }

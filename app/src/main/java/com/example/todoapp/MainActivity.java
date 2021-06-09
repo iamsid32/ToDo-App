@@ -18,6 +18,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.todoapp.db.AppDatabase;
+import com.example.todoapp.db.User;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,7 +29,8 @@ public class MainActivity extends AppCompatActivity {
 
     RecyclerView recyclerView;
     LinearLayoutManager linearLayoutManager;
-    public static List<String> list;
+//    public static List<String> list;
+    public static List<User> list1;
     Adapter adapter;
     private CardView card_view_add_button;
 
@@ -46,16 +50,19 @@ public class MainActivity extends AppCompatActivity {
         linearLayoutManager.setOrientation(RecyclerView.VERTICAL);
         recyclerView.setLayoutManager(linearLayoutManager);
 
-        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("com.example.todoapp", Context.MODE_PRIVATE);
-        HashSet<String> set = (HashSet<String>) sharedPreferences.getStringSet("addNote", null);
+//        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("com.example.todoapp", Context.MODE_PRIVATE);
+//        HashSet<String> set = (HashSet<String>) sharedPreferences.getStringSet("addNote", null);
 
-        if (set != null){
-            list = new ArrayList<>(set);
+        AppDatabase db = AppDatabase.getDbInstance(getApplicationContext());
+        List<User> userList = db.userDao().getAllUsers();
+
+        if (userList != null){
+            list1 = new ArrayList<>(userList);
         } else {
-            list = new ArrayList<>();
+            list1 = new ArrayList<>();
         }
 
-        adapter = new Adapter(list,this);
+        adapter = new Adapter(list1,this);
         recyclerView.setAdapter(adapter);
         layoutAnimation(recyclerView);
         adapter.notifyDataSetChanged();
@@ -79,13 +86,21 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View view) {
                         if (!et_add_here.getText().toString().isEmpty()){
-                            list.add(String.valueOf(et_add_here.getText()));
-                            adapter.notifyItemInserted(list.size()-1);
-                            adapter.notifyDataSetChanged();
+//                            list.add(String.valueOf(et_add_here.getText()));
+//                            adapter.notifyItemInserted(list.size()-1);
+//                            adapter.notifyDataSetChanged();
 
-                            SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("com.example.todoapp", Context.MODE_PRIVATE);
-                            HashSet<String> set = new HashSet(list);
-                            sharedPreferences.edit().putStringSet("addNote", set).apply();
+//                            SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("com.example.todoapp", Context.MODE_PRIVATE);
+//                            HashSet<String> set = new HashSet(list);
+//                            sharedPreferences.edit().putStringSet("addNote", set).apply();
+
+                            AppDatabase db = AppDatabase.getDbInstance(getApplicationContext());
+                            User user = new User();
+                            user.firstName = et_add_here.getText().toString();
+                            db.userDao().insertUser(user);
+                            list1.add(user);
+                            adapter.notifyItemInserted(list1.size()-1);
+                            adapter.notifyDataSetChanged();
 
                         } else {
                             Toast.makeText(MainActivity.this, "Can't create empty events!", Toast.LENGTH_SHORT).show();
